@@ -15,8 +15,6 @@ interface DonateDialogProps {
   mediaId: string;
   mediaTitle: string;
   artistName: string;
-  artistId: string;
-  stripeAccessToken?: string;
 }
 
 export default function DonateDialog({
@@ -24,8 +22,7 @@ export default function DonateDialog({
   onOpenChange,
   mediaId,
   mediaTitle,
-  artistName,
-  stripeAccessToken
+  artistName
 }: DonateDialogProps) {
   const [amount, setAmount] = useState('5.00');
   const [donorName, setDonorName] = useState('');
@@ -35,11 +32,6 @@ export default function DonateDialog({
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!stripeAccessToken) {
-      toast.error('Artist has not connected their Stripe account');
-      return;
-    }
 
     const amountNum = parseFloat(amount);
     if (isNaN(amountNum) || amountNum < 1) {
@@ -54,7 +46,7 @@ export default function DonateDialog({
 
       const shoppingItem: ShoppingItem = {
         productName: `Support: ${mediaTitle}`,
-        productDescription: `Donation to ${artistName} for "${mediaTitle}"${message ? ` - ${message}` : ''}`,
+        productDescription: `Donation to ${artistName} for "${mediaTitle}"${message ? ` - ${message}` : ''}${donorName ? ` from ${donorName}` : ''}`,
         priceInCents: BigInt(Math.round(amountNum * 100)),
         quantity: BigInt(1),
         currency: 'usd'

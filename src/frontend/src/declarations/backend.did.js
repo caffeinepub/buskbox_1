@@ -72,15 +72,18 @@ export const ArtistProfile = IDL.Record({
   'stripeAccessToken' : IDL.Opt(IDL.Text),
   'avatar' : ExternalBlob,
 });
-export const MediaItemDTO = IDL.Record({
-  'id' : IDL.Text,
-  'title' : IDL.Text,
-  'created' : IDL.Int,
-  'file' : ExternalBlob,
-  'tags' : IDL.Vec(IDL.Text),
-  'description' : IDL.Text,
-  'category' : MediaCategory,
-  'artist' : ArtistProfile,
+export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const MediaItemWithStats = IDL.Record({
+  'mediaItem' : MediaItem,
+  'totalDonations' : IDL.Nat,
+});
+export const ArtistWithStats = IDL.Record({
+  'totalDonations' : IDL.Nat,
+  'profile' : ArtistProfile,
+});
+export const MediaCardDTO = IDL.Record({
+  'media' : MediaItemWithStats,
+  'artist' : ArtistWithStats,
   'totalDonations' : IDL.Nat,
 });
 export const StripeSessionStatus = IDL.Variant({
@@ -162,11 +165,16 @@ export const idlService = IDL.Service({
   'getAllMediaItems' : IDL.Func([], [IDL.Vec(MediaItem)], ['query']),
   'getArtist' : IDL.Func([IDL.Principal], [IDL.Opt(ArtistProfile)], ['query']),
   'getCallerArtist' : IDL.Func([], [IDL.Opt(ArtistProfile)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getMediaItem' : IDL.Func([IDL.Text], [IDL.Opt(MediaItemDTO)], ['query']),
   'getMediaItemCountByCategory' : IDL.Func(
       [IDL.Principal, MediaCategory],
       [IDL.Nat],
+      ['query'],
+    ),
+  'getMediaItemWithStats' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(MediaCardDTO)],
       ['query'],
     ),
   'getMediaItemsByArtist' : IDL.Func(
@@ -179,12 +187,23 @@ export const idlService = IDL.Service({
       [IDL.Vec(MediaItem)],
       ['query'],
     ),
+  'getMediaWithArtistDonationContext' : IDL.Func(
+      [],
+      [IDL.Vec(MediaCardDTO)],
+      ['query'],
+    ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isDonationsEnabled' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
   'onboardArtist' : IDL.Func([ArtistProfile], [], []),
   'revokeStripeAccessToken' : IDL.Func([], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
   'transform' : IDL.Func(
       [TransformationInput],
@@ -262,15 +281,18 @@ export const idlFactory = ({ IDL }) => {
     'stripeAccessToken' : IDL.Opt(IDL.Text),
     'avatar' : ExternalBlob,
   });
-  const MediaItemDTO = IDL.Record({
-    'id' : IDL.Text,
-    'title' : IDL.Text,
-    'created' : IDL.Int,
-    'file' : ExternalBlob,
-    'tags' : IDL.Vec(IDL.Text),
-    'description' : IDL.Text,
-    'category' : MediaCategory,
-    'artist' : ArtistProfile,
+  const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const MediaItemWithStats = IDL.Record({
+    'mediaItem' : MediaItem,
+    'totalDonations' : IDL.Nat,
+  });
+  const ArtistWithStats = IDL.Record({
+    'totalDonations' : IDL.Nat,
+    'profile' : ArtistProfile,
+  });
+  const MediaCardDTO = IDL.Record({
+    'media' : MediaItemWithStats,
+    'artist' : ArtistWithStats,
     'totalDonations' : IDL.Nat,
   });
   const StripeSessionStatus = IDL.Variant({
@@ -353,11 +375,16 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getCallerArtist' : IDL.Func([], [IDL.Opt(ArtistProfile)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getMediaItem' : IDL.Func([IDL.Text], [IDL.Opt(MediaItemDTO)], ['query']),
     'getMediaItemCountByCategory' : IDL.Func(
         [IDL.Principal, MediaCategory],
         [IDL.Nat],
+        ['query'],
+      ),
+    'getMediaItemWithStats' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(MediaCardDTO)],
         ['query'],
       ),
     'getMediaItemsByArtist' : IDL.Func(
@@ -370,12 +397,23 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(MediaItem)],
         ['query'],
       ),
+    'getMediaWithArtistDonationContext' : IDL.Func(
+        [],
+        [IDL.Vec(MediaCardDTO)],
+        ['query'],
+      ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isDonationsEnabled' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
     'onboardArtist' : IDL.Func([ArtistProfile], [], []),
     'revokeStripeAccessToken' : IDL.Func([], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
     'transform' : IDL.Func(
         [TransformationInput],

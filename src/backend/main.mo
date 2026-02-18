@@ -31,6 +31,10 @@ actor {
     message : Text;
   };
 
+  public type UserProfile = {
+    name : Text;
+  };
+
   public type ArtistProfile = {
     displayName : Text;
     bio : Text;
@@ -40,15 +44,8 @@ actor {
     donationsEnabled : Bool;
   };
 
-  public type MediaItemDTO = {
-    id : Text;
-    title : Text;
-    description : Text;
-    category : MediaCategory;
-    tags : [Text];
-    file : Storage.ExternalBlob;
-    artist : ArtistProfile;
-    created : Int;
+  public type ArtistWithStats = {
+    profile : ArtistProfile;
     totalDonations : Nat;
   };
 
@@ -63,6 +60,17 @@ actor {
     created : Int;
   };
 
+  public type MediaItemWithStats = {
+    mediaItem : MediaItem;
+    totalDonations : Nat;
+  };
+
+  public type MediaCardDTO = {
+    media : MediaItemWithStats;
+    artist : ArtistWithStats;
+    totalDonations : Nat;
+  };
+
   public type MediaItemInput = {
     title : Text;
     description : Text;
@@ -73,8 +81,8 @@ actor {
     created : Int;
   };
 
-  module MediaItem {
-    public func compareByCreated(media1 : MediaItem, media2 : MediaItem) : Order.Order {
+  module MediaItemInput {
+    public func compareByCreated(media1 : MediaItemInput, media2 : MediaItemInput) : Order.Order {
       Int.compare(media2.created, media1.created); // Newest first
     };
   };
@@ -99,6 +107,7 @@ actor {
   };
 
   // State
+  let userProfiles = Map.empty<Principal, UserProfile>();
   let artists = Map.empty<Principal, ArtistProfile>();
   let mediaItems = Map.empty<Text, MediaItem>();
   let artistMedia = Map.empty<Principal, Set.Set<Text>>();
@@ -106,16 +115,40 @@ actor {
 
   var stripeConfiguration : ?Stripe.StripeConfiguration = null;
 
+  // User Profiles
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access profiles");
+    };
+    userProfiles.get(caller);
+  };
+
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
+    userProfiles.get(user);
+  };
+
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    userProfiles.add(caller, profile);
+  };
+
   // Artists
   public shared ({ caller }) func onboardArtist(profile : ArtistProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create artist profiles");
     };
-
     artists.add(caller, profile);
   };
 
   public query ({ caller }) func getCallerArtist() : async ?ArtistProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access their artist profile");
+    };
     artists.get(caller);
   };
 
@@ -123,15 +156,16 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can update artist profiles");
     };
-
     artists.add(caller, profile);
   };
 
   public query ({ caller }) func getArtist(artistId : Principal) : async ?ArtistProfile {
+    // Public read access - no authentication required
     artists.get(artistId);
   };
 
   public query ({ caller }) func isDonationsEnabled(artistId : Principal) : async Bool {
+    // Public read access - no authentication required
     switch (artists.get(artistId)) {
       case (null) { false };
       case (?profile) { profile.donationsEnabled };
@@ -142,6 +176,11 @@ actor {
   public shared ({ caller }) func uploadMediaItem(mediaInput : MediaItemInput) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can upload media");
+    };
+
+    // Verify caller is uploading as themselves
+    if (caller != mediaInput.artistId) {
+      Runtime.trap("Unauthorized: Can only upload media as yourself");
     };
 
     // Retrieve artist profile
@@ -176,10 +215,12 @@ actor {
   };
 
   public query ({ caller }) func getAllMediaItems() : async [MediaItem] {
-    mediaItems.values().toArray().sort(MediaItem.compareByCreated);
+    // Public read access - no authentication required
+    mediaItems.values().toArray();
   };
 
   public query ({ caller }) func getMediaItemsByArtist(artistId : Principal) : async [MediaItem] {
+    // Public read access - no authentication required
     let artistMediaIds = artistMedia.get(artistId);
 
     switch (artistMediaIds) {
@@ -223,6 +264,7 @@ actor {
   };
 
   public query ({ caller }) func getMediaItemsByCategory(category : MediaCategory) : async [MediaItem] {
+    // Public read access - no authentication required
     let allMedia = mediaItems.values().toArray();
     allMedia.filter(
       func(media) {
@@ -232,6 +274,7 @@ actor {
   };
 
   public query ({ caller }) func getMediaItemCountByCategory(artistId : Principal, category : MediaCategory) : async Nat {
+    // Public read access - no authentication required
     let artistMediaIds = switch (artistMedia.get(artistId)) {
       case (null) { return 0 };
       case (?mediaSet) {
@@ -251,12 +294,13 @@ actor {
     };
   };
 
-  public query ({ caller }) func getMediaItem(mediaId : Text) : async ?MediaItemDTO {
+  public query ({ caller }) func getMediaItemWithStats(mediaId : Text) : async ?MediaCardDTO {
+    // Public read access - no authentication required
     switch (mediaItems.get(mediaId)) {
       case (null) { null };
       case (?mediaItem) {
-        // Add totalDonations field
-        let totalDonations = switch (donations.get(mediaId)) {
+        // Calculate totalDonations for mediaItem
+        let totalMediaDonations = switch (donations.get(mediaId)) {
           case (null) { 0 };
           case (?mediaDonations) {
             mediaDonations.foldLeft(
@@ -266,26 +310,86 @@ actor {
           };
         };
 
-        // Get the artist profile using the media item's artistId
-        let artist = switch (artists.get(mediaItem.artistId)) {
+        // Get the artist profile and calculate total donations
+        let artistStats = switch (artists.get(mediaItem.artistId)) {
           case (null) { Runtime.trap("Artist profile not found") };
-          case (?profile) { profile };
+          case (?profile) {
+            // Calculate total donations for this artist
+            let artistDonations = donations.toArray().map(
+              func((_, donationsList)) { donationsList.foldLeft(0, func(acc, donation) { acc + donation.amountCents }) }
+            );
+            let totalArtistDonations = artistDonations.foldLeft(
+              0,
+              func(acc, amount) { acc + amount },
+            );
+
+            {
+              profile;
+              totalDonations = totalArtistDonations;
+            };
+          };
         };
 
-        let dto : MediaItemDTO = {
-          id = mediaItem.id;
-          title = mediaItem.title;
-          description = mediaItem.description;
-          category = mediaItem.category;
-          tags = mediaItem.tags;
-          file = mediaItem.file;
-          artist;
-          created = mediaItem.created;
-          totalDonations;
+        let dto : MediaCardDTO = {
+          media = { mediaItem; totalDonations = totalMediaDonations };
+          artist = artistStats;
+          totalDonations = totalMediaDonations + artistStats.totalDonations;
         };
         ?dto;
       };
     };
+  };
+
+  public query ({ caller }) func getMediaWithArtistDonationContext() : async [MediaCardDTO] {
+    // Public read access - no authentication required
+    let allMedia = mediaItems.values().toArray();
+    let allCards = allMedia.map(
+      func(media) {
+        let totalMediaDonations = switch (donations.get(media.id)) {
+          case (null) { 0 };
+          case (?mediaDonations) {
+            mediaDonations.foldLeft(
+              0,
+              func(acc, donation) { acc + donation.amountCents },
+            );
+          };
+        };
+
+        let artistStats = switch (artists.get(media.artistId)) {
+          case (null) { return null };
+          case (?profile) {
+            let artistDonations = donations.toArray().map(
+              func((_, donationsList)) { donationsList.foldLeft(0, func(acc, donation) { acc + donation.amountCents }) }
+            );
+            let totalArtistDonations = artistDonations.foldLeft(
+              0,
+              func(acc, amount) { acc + amount },
+            );
+            let artistWithStats = {
+              profile;
+              totalDonations = totalArtistDonations;
+            };
+            let mediaWithStats = {
+              mediaItem = media;
+              totalDonations = totalMediaDonations;
+            };
+            return ?{
+              media = mediaWithStats;
+              artist = artistWithStats;
+              totalDonations = totalMediaDonations + totalArtistDonations;
+            };
+          };
+        };
+      }
+    );
+    allCards.map(
+      func(card) {
+        switch (card) {
+          case (null) { Runtime.trap("Unexpected null MediaCardDTO") };
+          case (?actualCard) { actualCard };
+        };
+      }
+    );
   };
 
   // Donations
@@ -296,6 +400,11 @@ actor {
     switch (mediaItems.get(paymentInput.recipientId)) {
       case (null) { Runtime.trap("Media item not found") };
       case (?mediaItem) {
+        // Verify the artistId in the payment input matches the media item's artist
+        if (paymentInput.artistId != mediaItem.artistId) {
+          Runtime.trap("Artist ID mismatch");
+        };
+
         // Verify donations are enabled for this artist
         switch (artists.get(mediaItem.artistId)) {
           case (null) { Runtime.trap("Artist not found") };
@@ -379,6 +488,7 @@ actor {
 
   // Stripe integration
   public query ({ caller }) func isStripeConfigured() : async Bool {
+    // Public read access - no authentication required
     stripeConfiguration != null;
   };
 
@@ -397,14 +507,17 @@ actor {
   };
 
   public func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    // Public access for Stripe callback verification - no authentication required
     await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
   };
 
   public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    // Public access to allow guest donations - no authentication required
     await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
   };
 
   public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    // Public utility function for HTTP outcalls - no authentication required
     OutCall.transform(input);
   };
 };

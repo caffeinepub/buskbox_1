@@ -1,13 +1,15 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
+  "projectStateVersion": 7,
   "summary": "Busking platform for musicians to create accounts, upload categorized media (recordings/live sessions/videos), and receive per-upload donations via Stripe with a 10% platform administration fee.",
   "architectural_notes": [
-    "Use Stripe (likely Stripe Connect) to route donations to artists and apply a 10% platform fee."
+    "Use Stripe (likely Stripe Connect) to route donations to artists and apply a 10% platform fee.",
+    "Use browser-based audio/video players to stream uploaded media items (ensure proper formats and CORS/content-type handling).",
+    "Use Stripe Checkout sessions for guest donations (integrated with Stripe Connect payout to artists and 10% platform fee).",
+    "Ensure Stripe Checkout supports guest card payments for donations (no account required)."
   ],
   "known_issues": [],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- BuskBox wordmark logo with a subtle busking/music motif (buskbox-logo.dim_512x512.png)\n- Default artist avatar illustration in a warm, modern style (default-artist-avatar.dim_512x512.png)\n- Media placeholder thumbnail illustration suitable for audio/video items (media-placeholder-thumb.dim_1280x720.png)\n- Landing page hero illustration showing street performance/busking scene, modern flat/illustrative style (landing-hero.dim_1600x900.png)",
   "existing_features": [
     {
       "id": "feature-implement-artist-authentication-using-internet-identity-and-provide-an-artist-onboarding-flow-to-create-update-an-artist-profile-display-name-bio-avatar-image-url-or-uploaded-avatar-and-manage-their-public-page",
@@ -72,6 +74,30 @@
         "REQ-8"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-enable-in-browser-playback-for-uploaded-media-items-render-an-audio-player-for-recording-live-session-items-and-a-video-player-for-video-items-using-the-uploaded-media-file-url-so-guests-can-play-sound-and-videos-directly-in-the-ui",
+      "title": "Enable in-browser playback for uploaded media items: render an audio player for Recording/Live Session items and a video player for Video items, using the uploaded media file URL so guests can play sound and videos directly in the UI.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-guest-donation-support-via-stripe-checkout-accessible-anywhere-media-is-browsed-landing-page-recent-uploads-category-browse-pages-and-artist-pages-by-ensuring-each-mediacard-has-the-required-artist-donation-enabled-context-to-show-the-support-artist-button-when-available-and-by-using-the-existing-stripe-checkout-session-redirect-flow",
+      "title": "Make guest donation/support via Stripe Checkout accessible anywhere media is browsed (landing page recent uploads, category browse pages, and artist pages) by ensuring each MediaCard has the required artist + donation-enabled context to show the \"Support Artist\" button when available, and by using the existing Stripe Checkout session redirect flow.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-backend-and-frontend-support-to-fetch-browseable-media-together-with-enough-artist-donation-context-to-render-donation-ctas-without-per-card-n-1-fetches",
+      "title": "Add backend and frontend support to fetch browseable media together with enough artist donation context to render donation CTAs without per-card N+1 fetches.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -102,6 +128,24 @@
     {
       "id": "AR-5",
       "summary": "Stripe integration for donations paid into artists' Stripe accounts with 10% platform fee",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Enable in-app media playback for uploaded audio and video items (sound + video playback in the browser UI)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Implement guest donation/support via Stripe Checkout (Checkout session flow for donating to an artist/media item)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Enable card payments for guest donations (pay by card at checkout)",
       "reqIds": [],
       "status": "pending"
     }

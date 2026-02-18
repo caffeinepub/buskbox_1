@@ -1,18 +1,18 @@
 import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Music, Mic, Video, Heart, TrendingUp, Users } from 'lucide-react';
-import { useGetAllMediaItems } from '../hooks/useQueries';
+import { Music, Mic, Video, Heart, TrendingUp, Users, AlertCircle } from 'lucide-react';
+import { useGetMediaWithArtistDonationContext } from '../hooks/useQueries';
 import MediaCard from '../components/media/MediaCard';
 import MediaGrid from '../components/media/MediaGrid';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 
 export default function LandingPage() {
-  const { data: allMedia = [], isLoading } = useGetAllMediaItems();
+  const { data: enrichedMedia = [], isLoading, isError } = useGetMediaWithArtistDonationContext();
   const { identity } = useInternetIdentity();
   const isAuthenticated = !!identity;
 
-  const recentMedia = allMedia.slice(0, 8);
+  const recentMedia = enrichedMedia.slice(0, 8);
 
   const categories = [
     {
@@ -118,10 +118,22 @@ export default function LandingPage() {
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Loading...</p>
               </div>
+            ) : isError ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Failed to load media. Please try again later.</p>
+                </CardContent>
+              </Card>
             ) : (
               <MediaGrid>
-                {recentMedia.map((media) => (
-                  <MediaCard key={media.id} media={media} />
+                {recentMedia.map((dto) => (
+                  <MediaCard 
+                    key={dto.media.mediaItem.id} 
+                    media={dto.media.mediaItem} 
+                    artist={dto.artist.profile}
+                    donationsEnabled={dto.artist.profile.donationsEnabled && !!dto.artist.profile.stripeAccessToken}
+                  />
                 ))}
               </MediaGrid>
             )}

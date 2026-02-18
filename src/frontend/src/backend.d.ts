@@ -19,15 +19,9 @@ export interface TransformationOutput {
     body: Uint8Array;
     headers: Array<http_header>;
 }
-export interface MediaItemDTO {
-    id: string;
-    title: string;
-    created: bigint;
-    file: ExternalBlob;
-    tags: Array<string>;
-    description: string;
-    category: MediaCategory;
-    artist: ArtistProfile;
+export interface MediaCardDTO {
+    media: MediaItemWithStats;
+    artist: ArtistWithStats;
     totalDonations: bigint;
 }
 export interface MediaItem {
@@ -58,6 +52,10 @@ export interface DonatePaymentInput {
     amount: bigint;
     recipientId: string;
 }
+export interface ArtistWithStats {
+    totalDonations: bigint;
+    profile: ArtistProfile;
+}
 export interface DonatePaymentOutput {
     message: string;
     paymentId: string;
@@ -72,6 +70,10 @@ export interface ShoppingItem {
     quantity: bigint;
     priceInCents: bigint;
     productDescription: string;
+}
+export interface MediaItemWithStats {
+    mediaItem: MediaItem;
+    totalDonations: bigint;
 }
 export interface TransformationInput {
     context: Uint8Array;
@@ -110,6 +112,9 @@ export interface ArtistProfile {
     stripeAccessToken?: string;
     avatar: ExternalBlob;
 }
+export interface UserProfile {
+    name: string;
+}
 export enum MediaCategory {
     video = "video",
     liveSession = "liveSession",
@@ -129,17 +134,21 @@ export interface backendInterface {
     getAllMediaItems(): Promise<Array<MediaItem>>;
     getArtist(artistId: Principal): Promise<ArtistProfile | null>;
     getCallerArtist(): Promise<ArtistProfile | null>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getMediaItem(mediaId: string): Promise<MediaItemDTO | null>;
     getMediaItemCountByCategory(artistId: Principal, category: MediaCategory): Promise<bigint>;
+    getMediaItemWithStats(mediaId: string): Promise<MediaCardDTO | null>;
     getMediaItemsByArtist(artistId: Principal): Promise<Array<MediaItem>>;
     getMediaItemsByCategory(category: MediaCategory): Promise<Array<MediaItem>>;
+    getMediaWithArtistDonationContext(): Promise<Array<MediaCardDTO>>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isDonationsEnabled(artistId: Principal): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
     onboardArtist(profile: ArtistProfile): Promise<void>;
     revokeStripeAccessToken(): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateArtist(profile: ArtistProfile): Promise<void>;

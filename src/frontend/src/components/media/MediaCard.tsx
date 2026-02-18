@@ -7,16 +7,20 @@ import { Heart, Music, Video, Mic } from 'lucide-react';
 import type { MediaItem, ArtistProfile } from '../../backend';
 import { MediaCategory } from '../../backend';
 import DonateDialog from '../donations/DonateDialog';
+import MediaPlayback from './MediaPlayback';
 import { useState } from 'react';
+import { useIsStripeConfigured } from '../../hooks/useQueries';
 
 interface MediaCardProps {
   media: MediaItem;
   artist?: ArtistProfile;
   donationsEnabled?: boolean;
+  showPlayback?: boolean;
 }
 
-export default function MediaCard({ media, artist, donationsEnabled = false }: MediaCardProps) {
+export default function MediaCard({ media, artist, donationsEnabled = false, showPlayback = false }: MediaCardProps) {
   const [showDonateDialog, setShowDonateDialog] = useState(false);
+  const { data: isStripeConfigured, isLoading: stripeLoading } = useIsStripeConfigured();
 
   const getCategoryIcon = () => {
     switch (media.category) {
@@ -42,20 +46,27 @@ export default function MediaCard({ media, artist, donationsEnabled = false }: M
 
   const avatarUrl = artist?.avatar?.getDirectURL() || '/assets/generated/default-artist-avatar.dim_512x512.png';
 
+  // Donations are available if artist has enabled them AND Stripe is configured globally
+  const isDonationAvailable = donationsEnabled && isStripeConfigured && !stripeLoading;
+
   return (
     <>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="aspect-video bg-muted relative">
-          <img
-            src="/assets/generated/media-placeholder-thumb.dim_1280x720.png"
-            alt={media.title}
-            className="w-full h-full object-cover"
-          />
-          <Badge className="absolute top-2 right-2 gap-1">
-            {getCategoryIcon()}
-            {getCategoryLabel()}
-          </Badge>
-        </div>
+        {showPlayback ? (
+          <MediaPlayback category={media.category} file={media.file} title={media.title} />
+        ) : (
+          <div className="aspect-video bg-muted relative">
+            <img
+              src="/assets/generated/media-placeholder-thumb.dim_1280x720.png"
+              alt={media.title}
+              className="w-full h-full object-cover"
+            />
+            <Badge className="absolute top-2 right-2 gap-1">
+              {getCategoryIcon()}
+              {getCategoryLabel()}
+            </Badge>
+          </div>
+        )}
 
         <CardContent className="pt-4 space-y-3">
           <div>
@@ -91,14 +102,14 @@ export default function MediaCard({ media, artist, donationsEnabled = false }: M
         </CardContent>
 
         <CardFooter className="pt-0">
-          {donationsEnabled ? (
+          {isDonationAvailable ? (
             <Button onClick={() => setShowDonateDialog(true)} className="w-full gap-2">
               <Heart className="h-4 w-4" />
               Support Artist
             </Button>
           ) : (
             <div className="w-full text-center text-sm text-muted-foreground py-2">
-              Donations not available
+              {donationsEnabled ? 'Donations coming soon' : 'Donations not available'}
             </div>
           )}
         </CardFooter>
@@ -111,8 +122,6 @@ export default function MediaCard({ media, artist, donationsEnabled = false }: M
           mediaId={media.id}
           mediaTitle={media.title}
           artistName={artist.displayName}
-          artistId={media.artistId.toString()}
-          stripeAccessToken={artist.stripeAccessToken}
         />
       )}
     </>

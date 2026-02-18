@@ -1,181 +1,21 @@
 {
   "kind": "build_request",
-  "title": "Busking platform: artist accounts, categorized media uploads, and per-item Stripe donations with 10% platform fee",
-  "projectName": "BuskBox",
+  "title": "Enable card payments for guest donations",
+  "projectName": "Busker Support",
   "priority": "normal",
-  "requirements": [
-    {
-      "id": "REQ-1",
-      "text": "Implement artist authentication using Internet Identity and provide an artist onboarding flow to create/update an artist profile (display name, bio, avatar image URL or uploaded avatar) and manage their public page.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "the idea is to create a busking platform where this artists can set up an account"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A user can sign in with Internet Identity and create an artist profile.",
-        "An authenticated artist can edit their profile fields and see changes reflected on their public artist page.",
-        "Guests (not signed in) can view an artist page and the artist’s uploaded items."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Add categorized media uploads for artists: allow an authenticated artist to upload multiple files in one action; each uploaded file must be persisted as a separate media item with title, description, category (Recording / Live Session / Video), optional tags, and a created timestamp.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "upload and add their recording, live session, videos Into categories",
-          "Allow multiple file upload and each file is an item"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The upload UI accepts selecting multiple files at once.",
-        "After upload completes, each selected file appears as its own media item in the artist’s dashboard and on the public artist page.",
-        "Each media item has a category set to one of: Recording, Live Session, Video (editable by the artist).",
-        "Guests can browse media items by category."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Create a public browsing experience for guests to discover artists and media items by category, including a landing page, category browse views, and basic search/filter (by artist name and/or item title).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "platform for people that are musicians to upload",
-          "Into categories"
-        ]
-      },
-      "acceptanceCriteria": [
-        "There is a guest-accessible landing page listing categories and featured/recent items or artists.",
-        "Guests can filter/browse by category (Recording / Live Session / Video).",
-        "Guests can search and see matching artists and/or items."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Add a Stripe donation flow where each media item has a Donate button for guests; donations must be paid into the artist’s connected Stripe account, and the platform must collect a 10% application/admin fee from each donation.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "receive donations, by guests, on each of their uploads",
-          "From donations paid into their stripe account i Will only charge 10% of the capitalization for the administration of the app",
-          "each file is an item that has a donate button"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Each public media item page/card shows a Donate button visible to guests.",
-        "Clicking Donate starts a Stripe checkout/payment flow for that specific media item.",
-        "The donation is routed to the artist’s Stripe account and the platform fee is exactly 10% of the donation amount.",
-        "After payment, the UI shows a success/cancel state and the donation is recorded and visible in the artist dashboard (amount, date, media item)."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Implement Stripe account connection for artists (Stripe Connect-style onboarding): artists must be able to connect/disconnect their Stripe account and see connection status; donations must be disabled (with a clear message) for items when the artist has not connected Stripe.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "donations paid into their stripe account"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Artist dashboard shows Stripe connection status (connected/not connected) and provides actions to connect or disconnect.",
-        "If an artist is not connected, the Donate button is hidden or disabled and the UI explains that donations are unavailable.",
-        "If connected, donations can be initiated successfully."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Provide an artist dashboard to manage media items (list, edit metadata, delete), view donation totals (lifetime and per item), and view recent donations.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "platform where this artists can set up an account and receive donations"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Authenticated artists can view a list of their media items and edit title/description/category/tags.",
-        "Artists can delete a media item; deleted items no longer appear publicly.",
-        "Dashboard shows total donations received and a per-item donation summary.",
-        "Dashboard shows a list of recent donations with media item reference and timestamp."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Add a coherent, distinctive visual theme and information architecture for a busking/musician donation platform (typography, color palette, spacing, and component styling) and apply it consistently across landing, browse, artist pages, and dashboard (avoid blue/purple as the primary palette).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Create a platform for people that are musicians"
-        ]
-      },
-      "acceptanceCriteria": [
-        "App uses a consistent theme (colors, typography, layout) across all pages.",
-        "Primary palette is not blue/purple.",
-        "Key flows (browse → item → donate; artist login → upload → manage) are clear and visually consistent."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Add static generated image assets (logo, default avatar, and media placeholder thumbnails) and render them in the UI where appropriate (logo in header/landing; default avatar when artist has none; media placeholder when no thumbnail is available).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Create a platform for people that are musicians"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Generated images exist under frontend/public/assets/generated and are used by the UI.",
-        "Header/landing displays the app logo.",
-        "Artist cards/pages show a default avatar when none is set.",
-        "Media cards show a placeholder image when no thumbnail is available."
-      ]
-    }
-  ],
+  "requirements": [],
   "constraints": [
-    "Backend must remain a single Motoko actor (no multi-service backend).",
-    "Only Internet Identity is supported for authentication; do not add third-party auth providers.",
-    "Do not edit files under frontend/src/components/ui or any other immutable paths listed in SYSTEM_CONTEXT; compose/wrap those components instead.",
-    "Use Stripe for payments; do not add other payment providers."
+    "Do not modify files under frontend/src/components/ui (read-only shadcn components must be composed, not edited).",
+    "Do not modify immutable frontend hook/provider files listed in SYSTEM_CONTEXT (e.g., frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
+    "Respect the single-actor Motoko architecture: all backend logic remains in backend/main.mo; only add backend/migration.mo changes if state migration is required."
   ],
   "nonGoals": [
-    "Real-time chat or live streaming features.",
-    "Social logins (Google/Facebook/GitHub) or external OAuth providers beyond Internet Identity.",
-    "External databases or non-IC backend services.",
-    "Payout scheduling/withdrawal management outside of what Stripe provides to connected accounts."
+    "Add new payment providers beyond the existing Stripe Checkout flow.",
+    "Add third-party authentication beyond Internet Identity.",
+    "Implement real-time payment updates (e.g., WebSockets)."
   ],
   "imageRequirements": {
-    "required": [
-      "BuskBox wordmark logo with a subtle busking/music motif (buskbox-logo.dim_512x512.png)",
-      "Default artist avatar illustration in a warm, modern style (default-artist-avatar.dim_512x512.png)",
-      "Media placeholder thumbnail illustration suitable for audio/video items (media-placeholder-thumb.dim_1280x720.png)",
-      "Landing page hero illustration showing street performance/busking scene, modern flat/illustrative style (landing-hero.dim_1600x900.png)"
-    ],
+    "required": [],
     "edits": []
   },
   "userProfileUpdate": {

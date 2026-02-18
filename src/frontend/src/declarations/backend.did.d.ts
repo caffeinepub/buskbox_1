@@ -18,6 +18,10 @@ export interface ArtistProfile {
   'stripeAccessToken' : [] | [string],
   'avatar' : ExternalBlob,
 }
+export interface ArtistWithStats {
+  'totalDonations' : bigint,
+  'profile' : ArtistProfile,
+}
 export interface DonatePaymentInput {
   'stripeAccessToken' : string,
   'donorName' : string,
@@ -36,6 +40,11 @@ export interface DonatePaymentOutput {
   'recipientId' : string,
 }
 export type ExternalBlob = Uint8Array;
+export interface MediaCardDTO {
+  'media' : MediaItemWithStats,
+  'artist' : ArtistWithStats,
+  'totalDonations' : bigint,
+}
 export type MediaCategory = { 'video' : null } |
   { 'liveSession' : null } |
   { 'recording' : null };
@@ -49,17 +58,6 @@ export interface MediaItem {
   'description' : string,
   'category' : MediaCategory,
 }
-export interface MediaItemDTO {
-  'id' : string,
-  'title' : string,
-  'created' : bigint,
-  'file' : ExternalBlob,
-  'tags' : Array<string>,
-  'description' : string,
-  'category' : MediaCategory,
-  'artist' : ArtistProfile,
-  'totalDonations' : bigint,
-}
 export interface MediaItemInput {
   'title' : string,
   'created' : bigint,
@@ -68,6 +66,10 @@ export interface MediaItemInput {
   'artistId' : Principal,
   'description' : string,
   'category' : MediaCategory,
+}
+export interface MediaItemWithStats {
+  'mediaItem' : MediaItem,
+  'totalDonations' : bigint,
 }
 export interface ShoppingItem {
   'productName' : string,
@@ -93,6 +95,7 @@ export interface TransformationOutput {
   'body' : Uint8Array,
   'headers' : Array<http_header>,
 }
+export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -141,20 +144,24 @@ export interface _SERVICE {
   'getAllMediaItems' : ActorMethod<[], Array<MediaItem>>,
   'getArtist' : ActorMethod<[Principal], [] | [ArtistProfile]>,
   'getCallerArtist' : ActorMethod<[], [] | [ArtistProfile]>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getMediaItem' : ActorMethod<[string], [] | [MediaItemDTO]>,
   'getMediaItemCountByCategory' : ActorMethod<
     [Principal, MediaCategory],
     bigint
   >,
+  'getMediaItemWithStats' : ActorMethod<[string], [] | [MediaCardDTO]>,
   'getMediaItemsByArtist' : ActorMethod<[Principal], Array<MediaItem>>,
   'getMediaItemsByCategory' : ActorMethod<[MediaCategory], Array<MediaItem>>,
+  'getMediaWithArtistDonationContext' : ActorMethod<[], Array<MediaCardDTO>>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isDonationsEnabled' : ActorMethod<[Principal], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
   'onboardArtist' : ActorMethod<[ArtistProfile], undefined>,
   'revokeStripeAccessToken' : ActorMethod<[], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateArtist' : ActorMethod<[ArtistProfile], undefined>,

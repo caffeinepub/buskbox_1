@@ -1,30 +1,39 @@
 import { useParams } from '@tanstack/react-router';
 import { useState, useMemo } from 'react';
-import { useGetMediaItemsByCategory } from '../../hooks/useQueries';
+import { useGetMediaWithArtistDonationContext } from '../../hooks/useQueries';
 import { MediaCategory } from '../../backend';
 import MediaCard from '../../components/media/MediaCard';
 import MediaGrid from '../../components/media/MediaGrid';
 import SearchBar from '../../components/search/SearchBar';
-import { Music, Mic, Video } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Music, Mic, Video, AlertCircle } from 'lucide-react';
 
 export default function CategoryBrowsePage() {
   const { category } = useParams({ from: '/category/$category' });
   const [searchQuery, setSearchQuery] = useState('');
 
   const categoryEnum = category as MediaCategory;
-  const { data: media = [], isLoading } = useGetMediaItemsByCategory(categoryEnum);
+  const { data: enrichedMedia = [], isLoading, isError } = useGetMediaWithArtistDonationContext();
 
+  // Filter by category
+  const categoryMedia = useMemo(() => {
+    return enrichedMedia.filter((dto) => dto.media.mediaItem.category === categoryEnum);
+  }, [enrichedMedia, categoryEnum]);
+
+  // Filter by search query
   const filteredMedia = useMemo(() => {
-    if (!searchQuery.trim()) return media;
+    if (!searchQuery.trim()) return categoryMedia;
 
     const query = searchQuery.toLowerCase();
-    return media.filter(
-      (item) =>
+    return categoryMedia.filter((dto) => {
+      const item = dto.media.mediaItem;
+      return (
         item.title.toLowerCase().includes(query) ||
         item.description.toLowerCase().includes(query) ||
         item.tags.some((tag) => tag.toLowerCase().includes(query))
-    );
-  }, [media, searchQuery]);
+      );
+    });
+  }, [categoryMedia, searchQuery]);
 
   const getCategoryInfo = () => {
     switch (categoryEnum) {
@@ -74,23 +83,32 @@ export default function CategoryBrowsePage() {
         <div className="text-center py-12">
           <p className="text-muted-foreground">Loading...</p>
         </div>
+      ) : isError ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">Failed to load media. Please try again later.</p>
+          </CardContent>
+        </Card>
       ) : filteredMedia.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">
-            {searchQuery ? 'No media found matching your search.' : 'No media in this category yet.'}
-          </p>
-        </div>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground">
+              {searchQuery ? 'No media found matching your search.' : 'No media in this category yet.'}
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <>
-          <div className="mb-4 text-sm text-muted-foreground">
-            {filteredMedia.length} {filteredMedia.length === 1 ? 'item' : 'items'}
-          </div>
-          <MediaGrid>
-            {filteredMedia.map((item) => (
-              <MediaCard key={item.id} media={item} />
-            ))}
-          </MediaGrid>
-        </>
+        <MediaGrid>
+          {filteredMedia.map((dto) => (
+            <MediaCard 
+              key={dto.media.mediaItem.id} 
+              media={dto.media.mediaItem} 
+              artist={dto.artist.profile}
+              donationsEnabled={dto.artist.profile.donationsEnabled && !!dto.artist.profile.stripeAccessToken}
+            />
+          ))}
+        </MediaGrid>
       )}
     </div>
   );

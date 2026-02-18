@@ -1,7 +1,43 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { ArtistProfile, MediaItem, MediaItemDTO, MediaCategory, MediaItemInput, ShoppingItem, StripeConfiguration } from '../backend';
+import type { ArtistProfile, MediaItem, MediaCardDTO, MediaCategory, MediaItemInput, ShoppingItem, StripeConfiguration, UserProfile } from '../backend';
 import { Principal } from '@dfinity/principal';
+
+// User Profile queries
+export function useGetCallerUserProfile() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  const query = useQuery<UserProfile | null>({
+    queryKey: ['currentUserProfile'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCallerUserProfile();
+    },
+    enabled: !!actor && !actorFetching,
+    retry: false,
+  });
+
+  return {
+    ...query,
+    isLoading: actorFetching || query.isLoading,
+    isFetched: !!actor && query.isFetched,
+  };
+}
+
+export function useSaveCallerUserProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profile: UserProfile) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.saveCallerUserProfile(profile);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
 
 // Artist queries
 export function useGetCallerArtist() {
@@ -81,6 +117,19 @@ export function useGetAllMediaItems() {
   });
 }
 
+export function useGetMediaWithArtistDonationContext() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<MediaCardDTO[]>({
+    queryKey: ['enrichedMedia'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMediaWithArtistDonationContext();
+    },
+    enabled: !!actor && !isFetching
+  });
+}
+
 export function useGetMediaItemsByArtist(artistId: string | undefined) {
   const { actor, isFetching } = useActor();
 
@@ -107,19 +156,6 @@ export function useGetMediaItemsByCategory(category: MediaCategory) {
   });
 }
 
-export function useGetMediaItem(mediaId: string | undefined) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<MediaItemDTO | null>({
-    queryKey: ['mediaItem', mediaId],
-    queryFn: async () => {
-      if (!actor || !mediaId) return null;
-      return actor.getMediaItem(mediaId);
-    },
-    enabled: !!actor && !isFetching && !!mediaId
-  });
-}
-
 export function useUploadMediaItem() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -131,6 +167,7 @@ export function useUploadMediaItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allMedia'] });
+      queryClient.invalidateQueries({ queryKey: ['enrichedMedia'] });
       queryClient.invalidateQueries({ queryKey: ['artistMedia'] });
       queryClient.invalidateQueries({ queryKey: ['categoryMedia'] });
     }
@@ -148,6 +185,7 @@ export function useDeleteMediaItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allMedia'] });
+      queryClient.invalidateQueries({ queryKey: ['enrichedMedia'] });
       queryClient.invalidateQueries({ queryKey: ['artistMedia'] });
       queryClient.invalidateQueries({ queryKey: ['categoryMedia'] });
     }
@@ -180,6 +218,7 @@ export function useAddStripeAccessToken() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentArtist'] });
       queryClient.invalidateQueries({ queryKey: ['donationsEnabled'] });
+      queryClient.invalidateQueries({ queryKey: ['enrichedMedia'] });
     }
   });
 }
@@ -196,6 +235,7 @@ export function useRevokeStripeAccessToken() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentArtist'] });
       queryClient.invalidateQueries({ queryKey: ['donationsEnabled'] });
+      queryClient.invalidateQueries({ queryKey: ['enrichedMedia'] });
     }
   });
 }

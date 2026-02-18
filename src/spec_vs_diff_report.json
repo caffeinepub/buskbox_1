@@ -1,113 +1,17 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-18T12:19:07.874Z",
-  "summary": "Diff adds a new Motoko backend actor with artist/media/donation-related types and several new frontend pages/components for II login, onboarding, media upload, category browsing, and a Stripe checkout dialog. However, key requested behaviors around Stripe Connect onboarding, per-item routed donations with 10% platform fee, donation recording/dashboard reporting, and guest search by artist name are not clearly implemented based on the provided diff summary (several relevant files are truncated or omitted).",
-  "missing_requirements": [
-    {
-      "id": "REQ-3",
-      "requirement": "Guest search/filter must support searching by artist name and/or item title, and guests should be able to discover artists and items (not only items).",
-      "reason": "Category browse search filters only by item title/description/tags; there is no evidence of searching by artist name or a guest artist discovery/search view in the shown code.",
-      "evidence": [
-        "frontend/src/pages/browse/CategoryBrowsePage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "requirement": "Stripe donation flow must route payment to the artist’s connected Stripe account with exactly 10% platform fee, record the donation, and show success/cancel states with donation visible in artist dashboard.",
-      "reason": "Frontend donation flow creates a generic Stripe checkout session from items/successUrl/cancelUrl and only checks for presence of an artist 'stripeAccessToken'; there is no evidence of destination charges/application fee (10%) nor any donation recording/display in dashboard in the shown code. Backend donation/Stripe logic is truncated and not verifiable here.",
-      "evidence": [
-        "frontend/src/components/donations/DonateDialog.tsx",
-        "frontend/src/components/media/MediaCard.tsx",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Implement Stripe Connect-style onboarding for artists to connect/disconnect accounts and reflect connection status; donations disabled when not connected.",
-      "reason": "The UI appears to require artists to manually paste a 'Stripe access token' rather than performing a Stripe Connect onboarding flow. While a connected/not connected badge exists, the Connect onboarding requirement is not evidenced.",
-      "evidence": [
-        "frontend/src/components/stripe/StripeConnectionCard.tsx"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "requirement": "Artist dashboard must support editing/deleting media items and show donation totals (lifetime and per item) plus recent donations.",
-      "reason": "An ArtistDashboard route exists, but the dashboard implementation and donation summaries/recent donations are not shown in the diff summary; backend donation aggregation and delete/edit operations are also not evidenced due to truncation.",
-      "evidence": [
-        "frontend/src/App.tsx",
-        "backend/main.mo",
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "Manual Stripe access-token entry UI for connecting Stripe (token paste), rather than requested Connect-style onboarding.",
-      "reason": "BuildRequest asks for Stripe Connect-style onboarding; the diff adds a token input workflow which is an unrequested/alternative approach.",
-      "evidence": [
-        "frontend/src/components/stripe/StripeConnectionCard.tsx"
-      ]
-    },
-    {
-      "description": "Caffeine.ai promotional footer link with UTM parameters.",
-      "reason": "Not requested in the BuildRequest scope; adds third-party promotional link.",
-      "evidence": [
-        "frontend/src/components/layout/Footer.tsx"
-      ]
-    },
-    {
-      "description": "Artist profile includes 'externalLinks' field.",
-      "reason": "BuildRequest profile fields specify display name, bio, and avatar; external links were not requested.",
-      "evidence": [
-        "backend/main.mo",
-        "frontend/src/components/artist/ArtistOnboarding.tsx",
-        "frontend/src/pages/artist/ArtistPage.tsx"
-      ]
-    },
-    {
-      "description": "Backend access-control initialization via a secret URL parameter ('caffeineAdminToken').",
-      "reason": "Not mentioned in the BuildRequest; introduces an additional admin/secret-token mechanism beyond Internet Identity authentication requirements.",
-      "evidence": [
-        "frontend/src/hooks/useActor.ts"
-      ]
-    }
-  ],
-  "confidence": 0.56,
+  "generatedAt": "2026-02-18T13:00:07.245Z",
+  "summary": "BuildRequest contains no explicit requirements or acceptance criteria beyond high-level constraints. The diff modifies backend/main.mo and several frontend components/pages to support a guest-accessible Stripe Checkout donation flow and to gate donation UI on global Stripe configuration plus artist donation settings. No evidence in the diff summary indicates violations of the stated file modification constraints.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.62,
   "changed_files": [
-    "all_files_summary.json",
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/index.css",
-    "frontend/index.html",
-    "frontend/src/App.tsx",
-    "frontend/src/components/artist/ArtistOnboarding.tsx",
-    "frontend/src/components/auth/LoginButton.tsx",
     "frontend/src/components/donations/DonateDialog.tsx",
-    "frontend/src/components/layout/AppLayout.tsx",
-    "frontend/src/components/layout/Footer.tsx",
-    "frontend/src/components/layout/Header.tsx",
     "frontend/src/components/media/MediaCard.tsx",
-    "frontend/src/components/media/MediaGrid.tsx",
-    "frontend/src/components/media/MediaUploadForm.tsx",
-    "frontend/src/components/search/SearchBar.tsx",
-    "frontend/src/components/stripe/StripeConnectionCard.tsx",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/LandingPage.tsx",
     "frontend/src/pages/artist/ArtistPage.tsx",
-    "frontend/src/pages/browse/CategoryBrowsePage.tsx",
-    "frontend/src/pages/dashboard/ArtistDashboard.tsx",
-    "frontend/src/pages/dashboard/DashboardDonations.tsx",
-    "frontend/src/pages/dashboard/DashboardHome.tsx",
-    "frontend/src/pages/dashboard/DashboardMedia.tsx",
-    "frontend/src/pages/payments/PaymentFailure.tsx",
-    "frontend/src/pages/payments/PaymentSuccess.tsx",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

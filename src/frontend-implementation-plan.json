@@ -1,0 +1,309 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "BuskBox frontend: public discovery, artist onboarding/dashboard, media uploads, and Stripe donations UI",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Add Internet Identity sign-in UI plus artist onboarding/edit profile flow and public artist page rendering.",
+      "acceptanceCriteria": [
+        "A user can sign in with Internet Identity and create an artist profile.",
+        "An authenticated artist can edit their profile fields and see changes reflected on their public artist page.",
+        "Guests (not signed in) can view an artist page and the artist’s uploaded items."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "create",
+          "description": "Create the app shell (header + routed content) and wire in top-level navigation (Landing, Browse by category, Artist dashboard, Artist public pages). Use the authorization component’s frontend authentication guidance (Internet Identity state + clearing cached data on logout). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/router.tsx",
+          "operation": "create",
+          "description": "Add TanStack Router configuration for guest and artist flows, including routes for landing, category browse, artist public page, and authenticated dashboard/onboarding routes."
+        },
+        {
+          "path": "frontend/src/components/auth/LoginButton.tsx",
+          "operation": "create",
+          "description": "Implement login/logout button using Internet Identity via the existing useInternetIdentity hook; on logout, clear React Query cache to remove cached private data as per authorization component guidance. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useArtist.ts",
+          "operation": "create",
+          "description": "Create React Query hooks wrapping backend actor calls for getCallerArtist/getArtist and onboardArtist/updateArtist; include loading/error states and graceful handling of authorization traps (authorization component guidance). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/artist/ArtistOnboarding.tsx",
+          "operation": "create",
+          "description": "Create onboarding/edit profile UI (display name, bio, external links, avatar URL or uploaded avatar). Use blob-storage ExternalBlob to support uploaded avatar and prefer rendering avatar via direct URL for performance/caching. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/artist/ArtistPage.tsx",
+          "operation": "create",
+          "description": "Create a guest-accessible artist public page that fetches an artist profile and their media items and renders profile details + item list."
+        },
+        {
+          "path": "frontend/src/components/media/MediaGrid.tsx",
+          "operation": "create",
+          "description": "Shared grid/list component to render media items on public artist pages and browsing views, including fallbacks for missing artwork."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Implement multi-file categorized media upload UI and ensure each selected file becomes a separate media item with metadata.",
+      "acceptanceCriteria": [
+        "The upload UI accepts selecting multiple files at once.",
+        "After upload completes, each selected file appears as its own media item in the artist’s dashboard and on the public artist page.",
+        "Each media item has a category set to one of: Recording, Live Session, Video (editable by the artist).",
+        "Guests can browse media items by category."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/media/MediaUploadForm.tsx",
+          "operation": "create",
+          "description": "Create authenticated upload UI supporting selecting multiple files and applying title/description/category/tags (optionally per-item after selection). Use blob-storage ExternalBlob.fromBytes(...).withUploadProgress(...) to upload each file and display progress per file. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useMedia.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for getMediaItemsByArtist/getMediaItemsByCategory/getAllMediaItems/getMediaItem, plus mutations for uploadMediaItem and deleteMediaItem; ensure cache invalidation refreshes dashboard and public pages after uploads."
+        },
+        {
+          "path": "frontend/src/pages/dashboard/DashboardMedia.tsx",
+          "operation": "create",
+          "description": "Add dashboard section that shows the artist’s media list and integrates the MediaUploadForm; ensure newly uploaded files appear as separate items after mutation success."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Create guest browsing UI: landing page, category browse views, and basic search/filter across artists/items.",
+      "acceptanceCriteria": [
+        "There is a guest-accessible landing page listing categories and featured/recent items or artists.",
+        "Guests can filter/browse by category (Recording / Live Session / Video).",
+        "Guests can search and see matching artists and/or items."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/LandingPage.tsx",
+          "operation": "create",
+          "description": "Create a guest landing page that lists the three categories and shows a featured/recent section built from getAllMediaItems (and/or a curated subset) plus a search entry point."
+        },
+        {
+          "path": "frontend/src/pages/browse/CategoryBrowsePage.tsx",
+          "operation": "create",
+          "description": "Create category browse view (Recording/Live Session/Video) that fetches and renders items by selected category and supports search filtering by artist name and/or item title."
+        },
+        {
+          "path": "frontend/src/components/search/SearchBar.tsx",
+          "operation": "create",
+          "description": "Reusable search/filter component that can filter rendered results by artist display name and/or media item title."
+        },
+        {
+          "path": "frontend/src/router.tsx",
+          "operation": "modify",
+          "description": "Register routes for LandingPage and CategoryBrowsePage and wire navigation links (categories) so guests can browse without authentication."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Add per-media-item Stripe donation UI flow with success/cancel handling and dashboard visibility of donation results.",
+      "acceptanceCriteria": [
+        "Each public media item page/card shows a Donate button visible to guests.",
+        "Clicking Donate starts a Stripe checkout/payment flow for that specific media item.",
+        "The donation is routed to the artist’s Stripe account and the platform fee is exactly 10% of the donation amount.",
+        "After payment, the UI shows a success/cancel state and the donation is recorded and visible in the artist dashboard (amount, date, media item)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useStripeCheckout.ts",
+          "operation": "create",
+          "description": "Implement Stripe checkout mutation using the stripe component guidance: call createCheckoutSession, JSON-parse the response, validate a non-empty url, and redirect using window.location.href. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/donations/DonateDialog.tsx",
+          "operation": "create",
+          "description": "Create a donate UI (amount + optional donor name/message) invoked per media item; on submit, build a ShoppingItem reflecting the donation and start Stripe checkout via useStripeCheckout. Use clear error handling to avoid redirecting to an undefined URL. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/media/MediaCard.tsx",
+          "operation": "create",
+          "description": "Create a media card component that renders media details and includes a Donate action (integrates DonateDialog) when donations are available for the artist/item."
+        },
+        {
+          "path": "frontend/src/pages/payments/PaymentSuccess.tsx",
+          "operation": "create",
+          "description": "Create payment success page that reads Stripe session identifiers from the URL, calls getStripeSessionStatus to confirm completion, and shows a completed state; trigger a client-side refresh of dashboard donation-related queries after confirmation. Verify the stripe component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/payments/PaymentFailure.tsx",
+          "operation": "create",
+          "description": "Create payment cancel/failure page that shows an explanatory state and navigation back to browsing/item."
+        },
+        {
+          "path": "frontend/src/router.tsx",
+          "operation": "modify",
+          "description": "Register required payment status routes: /payment-success and /payment-failure, and ensure they are reachable after Stripe redirect."
+        },
+        {
+          "path": "frontend/src/pages/dashboard/DashboardDonations.tsx",
+          "operation": "create",
+          "description": "Add dashboard donation summary UI (lifetime + per item) using available media item donation aggregates (e.g., MediaItemDTO.totalDonations where available) and show a recent-donations section with a clear empty state until backend provides a queryable donation history."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Add artist Stripe connect/disconnect UI with connection status and donation availability messaging on public items.",
+      "acceptanceCriteria": [
+        "Artist dashboard shows Stripe connection status (connected/not connected) and provides actions to connect or disconnect.",
+        "If an artist is not connected, the Donate button is hidden or disabled and the UI explains that donations are unavailable.",
+        "If connected, donations can be initiated successfully."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/stripe/StripeConnectionCard.tsx",
+          "operation": "create",
+          "description": "Create dashboard UI for Stripe connection status using getCallerArtist (stripeAccessToken presence and/or donationsEnabled) and actions calling addStripeAccessToken/revokeStripeAccessToken; include clear connected/not connected messaging. Verify the stripe component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useStripeConnect.ts",
+          "operation": "create",
+          "description": "Add React Query mutations/queries for addStripeAccessToken, revokeStripeAccessToken, isDonationsEnabled, and getCallerArtist to keep Stripe connection status in sync across UI. Verify the stripe component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/media/MediaCard.tsx",
+          "operation": "modify",
+          "description": "Disable/hide Donate button when donations are unavailable (e.g., isDonationsEnabled is false) and render a clear explanation message for guests."
+        },
+        {
+          "path": "frontend/src/pages/dashboard/DashboardHome.tsx",
+          "operation": "create",
+          "description": "Create a dashboard home/overview page section that includes the StripeConnectionCard and a short checklist for enabling donations."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Implement an artist dashboard for managing media (list/edit/delete) and viewing donation totals and recent donations.",
+      "acceptanceCriteria": [
+        "Authenticated artists can view a list of their media items and edit title/description/category/tags.",
+        "Artists can delete a media item; deleted items no longer appear publicly.",
+        "Dashboard shows total donations received and a per-item donation summary.",
+        "Dashboard shows a list of recent donations with media item reference and timestamp."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/dashboard/ArtistDashboard.tsx",
+          "operation": "create",
+          "description": "Create the main authenticated artist dashboard container with sub-navigation/tabs for Profile, Media, and Donations; guard access by requiring Internet Identity login and an onboarded artist profile (authorization component guidance). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/media/MediaItemRow.tsx",
+          "operation": "create",
+          "description": "Create dashboard list row/card for a media item with actions: edit metadata (opens modal) and delete."
+        },
+        {
+          "path": "frontend/src/components/media/EditMediaItemDialog.tsx",
+          "operation": "create",
+          "description": "Create UI for editing title/description/category/tags. Wire to the available backend update capability if present; otherwise, show a clear disabled state and track changes locally until backend support is available."
+        },
+        {
+          "path": "frontend/src/hooks/useMedia.ts",
+          "operation": "modify",
+          "description": "Add deleteMediaItem mutation wiring and ensure react-query invalidation refreshes: artist dashboard lists, public artist pages, and category browse results."
+        },
+        {
+          "path": "frontend/src/router.tsx",
+          "operation": "modify",
+          "description": "Wire /dashboard route to ArtistDashboard and ensure it is reachable from header navigation when authenticated."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Apply a coherent, distinctive warm busking-themed visual system (non-blue/purple primary) across all pages and components.",
+      "acceptanceCriteria": [
+        "App uses a consistent theme (colors, typography, layout) across all pages.",
+        "Primary palette is not blue/purple.",
+        "Key flows (browse → item → donate; artist login → upload → manage) are clear and visually consistent."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "create",
+          "description": "Create global theme tokens (CSS variables used by Tailwind/shadcn) with a warm, busking-inspired palette (e.g., amber/coral/charcoal) ensuring primary is not blue/purple; set base typography, background, and consistent spacing defaults."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Adjust/extend theme configuration (via CSS variable values and/or additional semantic tokens) to support the BuskBox brand styling consistently across pages without relying on blue/purple as primary."
+        },
+        {
+          "path": "frontend/src/components/layout/AppLayout.tsx",
+          "operation": "create",
+          "description": "Create a shared layout (header/footer, max-width container, consistent page padding) used by public pages and dashboard for unified information architecture."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wrap routed pages with AppLayout and ensure key navigation flows are prominent and consistent (Browse → Item/Artist → Donate; Artist login → Dashboard → Upload/Manage)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Add generated static image assets (logo, default avatar, placeholders, hero) and render them in appropriate UI locations.",
+      "acceptanceCriteria": [
+        "Generated images exist under frontend/public/assets/generated and are used by the UI.",
+        "Header/landing displays the app logo.",
+        "Artist cards/pages show a default avatar when none is set.",
+        "Media cards show a placeholder image when no thumbnail is available."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/buskbox-logo.dim_512x512.png",
+          "operation": "create",
+          "description": "Add generated asset file and ensure it is referenced by header/landing branding."
+        },
+        {
+          "path": "frontend/public/assets/generated/default-artist-avatar.dim_512x512.png",
+          "operation": "create",
+          "description": "Add generated asset file and ensure it is used as the fallback avatar when an artist has not set one."
+        },
+        {
+          "path": "frontend/public/assets/generated/media-placeholder-thumb.dim_1280x720.png",
+          "operation": "create",
+          "description": "Add generated asset file and ensure it is used as the fallback thumbnail when a media item has no thumbnail/artwork."
+        },
+        {
+          "path": "frontend/public/assets/generated/landing-hero.dim_1600x900.png",
+          "operation": "create",
+          "description": "Add generated asset file and ensure it is used on the landing page hero section."
+        },
+        {
+          "path": "frontend/src/components/layout/Header.tsx",
+          "operation": "create",
+          "description": "Create a header component that renders the app logo from frontend/public/assets/generated/buskbox-logo.dim_512x512.png and includes navigation + login button."
+        },
+        {
+          "path": "frontend/src/pages/LandingPage.tsx",
+          "operation": "modify",
+          "description": "Render the landing hero image from frontend/public/assets/generated/landing-hero.dim_1600x900.png and ensure branding is visible above the fold."
+        },
+        {
+          "path": "frontend/src/pages/artist/ArtistPage.tsx",
+          "operation": "modify",
+          "description": "Use frontend/public/assets/generated/default-artist-avatar.dim_512x512.png when the artist profile has no avatar set."
+        },
+        {
+          "path": "frontend/src/components/media/MediaCard.tsx",
+          "operation": "modify",
+          "description": "Use frontend/public/assets/generated/media-placeholder-thumb.dim_1280x720.png as a fallback when no media thumbnail is available."
+        }
+      ]
+    }
+  ]
+}

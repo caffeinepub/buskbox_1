@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Busking platform for musicians to create accounts, upload categorized media (recordings/live sessions/videos), and receive per-upload donations via Stripe with a 10% platform administration fee.",
+  "architectural_notes": [
+    "Use Stripe (likely Stripe Connect) to route donations to artists and apply a 10% platform fee."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- BuskBox wordmark logo with a subtle busking/music motif (buskbox-logo.dim_512x512.png)\n- Default artist avatar illustration in a warm, modern style (default-artist-avatar.dim_512x512.png)\n- Media placeholder thumbnail illustration suitable for audio/video items (media-placeholder-thumb.dim_1280x720.png)\n- Landing page hero illustration showing street performance/busking scene, modern flat/illustrative style (landing-hero.dim_1600x900.png)",
+  "existing_features": [
+    {
+      "id": "feature-implement-artist-authentication-using-internet-identity-and-provide-an-artist-onboarding-flow-to-create-update-an-artist-profile-display-name-bio-avatar-image-url-or-uploaded-avatar-and-manage-their-public-page",
+      "title": "Implement artist authentication using Internet Identity and provide an artist onboarding flow to create/update an artist profile (display name, bio, avatar image URL or uploaded avatar) and manage their public page.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-categorized-media-uploads-for-artists-allow-an-authenticated-artist-to-upload-multiple-files-in-one-action-each-uploaded-file-must-be-persisted-as-a-separate-media-item-with-title-description-category-recording-live-session-video-optional-tags-and-a-created-timestamp",
+      "title": "Add categorized media uploads for artists: allow an authenticated artist to upload multiple files in one action; each uploaded file must be persisted as a separate media item with title, description, category (Recording / Live Session / Video), optional tags, and a created timestamp.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-public-browsing-experience-for-guests-to-discover-artists-and-media-items-by-category-including-a-landing-page-category-browse-views-and-basic-search-filter-by-artist-name-and-or-item-title",
+      "title": "Create a public browsing experience for guests to discover artists and media items by category, including a landing page, category browse views, and basic search/filter (by artist name and/or item title).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-stripe-donation-flow-where-each-media-item-has-a-donate-button-for-guests-donations-must-be-paid-into-the-artist-s-connected-stripe-account-and-the-platform-must-collect-a-10-application-admin-fee-from-each-donation",
+      "title": "Add a Stripe donation flow where each media item has a Donate button for guests; donations must be paid into the artist’s connected Stripe account, and the platform must collect a 10% application/admin fee from each donation.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-stripe-account-connection-for-artists-stripe-connect-style-onboarding-artists-must-be-able-to-connect-disconnect-their-stripe-account-and-see-connection-status-donations-must-be-disabled-with-a-clear-message-for-items-when-the-artist-has-not-connected-stripe",
+      "title": "Implement Stripe account connection for artists (Stripe Connect-style onboarding): artists must be able to connect/disconnect their Stripe account and see connection status; donations must be disabled (with a clear message) for items when the artist has not connected Stripe.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-provide-an-artist-dashboard-to-manage-media-items-list-edit-metadata-delete-view-donation-totals-lifetime-and-per-item-and-view-recent-donations",
+      "title": "Provide an artist dashboard to manage media items (list, edit metadata, delete), view donation totals (lifetime and per item), and view recent donations.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-coherent-distinctive-visual-theme-and-information-architecture-for-a-busking-musician-donation-platform-typography-color-palette-spacing-and-component-styling-and-apply-it-consistently-across-landing-browse-artist-pages-and-dashboard-avoid-blue-purple-as-the-primary-palette",
+      "title": "Add a coherent, distinctive visual theme and information architecture for a busking/musician donation platform (typography, color palette, spacing, and component styling) and apply it consistently across landing, browse, artist pages, and dashboard (avoid blue/purple as the primary palette).",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-static-generated-image-assets-logo-default-avatar-and-media-placeholder-thumbnails-and-render-them-in-the-ui-where-appropriate-logo-in-header-landing-default-avatar-when-artist-has-none-media-placeholder-when-no-thumbnail-is-available",
+      "title": "Add static generated image assets (logo, default avatar, and media placeholder thumbnails) and render them in the UI where appropriate (logo in header/landing; default avatar when artist has none; media placeholder when no thumbnail is available).",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Musician account setup (artist profiles)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Upload and manage media items (recordings, live sessions, videos) with category assignment",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Support multiple file upload where each uploaded file becomes a separate item",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Donation flow: donate button on each media item for guests to contribute",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Stripe integration for donations paid into artists' Stripe accounts with 10% platform fee",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "BuskBox",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
